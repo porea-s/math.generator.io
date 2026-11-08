@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>数式ジェネレーター</title>
+<script>window.MathJax={tex:{inlineMath:[['$','$'],['\\(','\\)']],displayMath:[['$$','$$'],['\\[','\\]']]},options:{skipHtmlTags:['script','noscript','style','textarea','pre','code']}};</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<style>
+:root{color-scheme:light;--bg:#f4f6fb;--panel:#fff;--line:#e1e5ee;--ink:#202638;--muted:#70798c;--accent:#536dfe;--accent2:#edf0ff;--shadow:0 5px 22px #25345a0c}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif}header{background:#202944;color:white;padding:19px max(22px,calc((100% - 1180px)/2));display:flex;align-items:center;justify-content:space-between;gap:12px}header h1{font-size:20px;margin:0;font-weight:700}header span{font-size:12px;color:#c8d0e5}.wrap{max-width:1180px;margin:24px auto;padding:0 18px;display:grid;grid-template-columns: minmax(0,1.12fr) minmax(300px,.88fr);gap:18px}.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}.panel-head{padding:15px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}.panel-head h2{font-size:15px;margin:0}.panel-body{padding:17px}.tabs{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px}.tab{border:1px solid var(--line);background:#fff;color:#596276;border-radius:8px;padding:7px 11px;cursor:pointer;font-size:12px}.tab.active{background:var(--accent2);border-color:#cbd2ff;color:#334bd5;font-weight:700}.symbols{display:grid;grid-template-columns:repeat(auto-fill,minmax(66px,1fr));gap:8px;max-height:315px;overflow:auto;padding:2px}.symbol{min-height:48px;border:1px solid var(--line);background:#fff;border-radius:9px;cursor:pointer;color:var(--ink);font-size:15px;display:flex;align-items:center;justify-content:center;transition:.15s}.symbol:hover{border-color:var(--accent);background:var(--accent2);transform:translateY(-1px)}.symbol small{font-size:10px;color:var(--muted);margin-left:4px}.editor-label{font-size:12px;color:var(--muted);display:block;margin:16px 0 7px}textarea{width:100%;min-height:180px;resize:vertical;border:1px solid var(--line);border-radius:10px;padding:13px;font:14px/1.65 ui-monospace,SFMono-Regular,Consolas,monospace;color:#27314a;outline:none}textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px #536dfe18}.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.btn{border:1px solid var(--line);border-radius:8px;padding:9px 13px;background:white;cursor:pointer;font-size:12px;color:#384258}.btn.primary{background:var(--accent);border-color:var(--accent);color:white}.btn:hover{filter:brightness(.97)}.preview{min-height:250px;display:flex;align-items:center;justify-content:center;padding:25px 16px;overflow:auto;font-size:22px}.preview.empty{color:#a0a7b5;font-size:14px}.preview mjx-container{max-width:100%;overflow-x:auto;overflow-y:hidden}.hint{font-size:11px;color:var(--muted);line-height:1.6;margin-top:10px}.status{font-size:11px;color:#16845b;min-height:17px;margin-top:8px}.quick{display:flex;gap:7px;flex-wrap:wrap;margin-top:13px}.quick button{background:#f7f8fc;border:1px solid var(--line);border-radius:7px;padding:6px 9px;font-size:11px;cursor:pointer}.footer{max-width:1180px;margin:0 auto;padding:0 18px 25px;color:var(--muted);font-size:11px}@media(max-width:800px){.wrap{grid-template-columns:1fr;margin-top:14px}.preview{min-height:170px}header{padding:16px 18px}}
+</style>
+</head>
+<body>
+<header><h1>∑ 数式ジェネレーター</h1><span>LaTeX Formula Editor</span></header>
+<main class="wrap">
+<section class="panel">
+ <div class="panel-head"><h2>数式エディター</h2><span style="font-size:11px;color:#7b8496">ボタンを押して数式を追加</span></div>
+ <div class="panel-body">
+  <div class="tabs" id="tabs"></div>
+  <div class="symbols" id="symbols"></div>
+  <label class="editor-label" for="latex">LaTeXコード（直接編集も可能）</label>
+  <textarea id="latex" spellcheck="false" placeholder="ここに数式を入力、または上のボタンから追加...">\\frac{a+b}{c}</textarea>
+  <div class="actions"><button class="btn primary" id="copy">コードをコピー</button><button class="btn" id="selectAll">全選択</button><button class="btn" id="clear">クリア</button><button class="btn" id="example">サンプルを挿入</button></div>
+  <div class="status" id="status" aria-live="polite"></div>
+  <div class="hint">※ ボタンを押すとカーソル位置にLaTeX記法が挿入されるよ。§マークは入力位置を示す目印で、実際の数式には含まれないよ。</div>
+ </div>
+</section>
+<section class="panel">
+ <div class="panel-head"><h2>数式プレビュー</h2><span style="font-size:11px;color:#7b8496">リアルタイム表示</span></div>
+ <div class="panel-body">
+  <div class="preview" id="preview">$$\\frac{a+b}{c}$$</div>
+  <div class="actions" style="justify-content:center;margin-top:12px"><button class="btn primary" id="saveImage">画像として保存（PNG）</button></div>
+  <div class="quick"><button data-wrap="\\[§\\]">別行立て数式</button><button data-wrap="\\(§\\)">文中数式</button><button data-wrap="\\begin{cases}§\\end{cases}">場合分け</button></div>
+  <p class="hint">数式の表示にはMathJaxを使用しているよ。初回表示にはインターネット接続が必要。</p>
+ </div>
+</section>
+</main>
+<div class="footer">数式ジェネレーター · HTML / CSS / JavaScript</div>
+<script>
+const groups={
+'基本':[
+ ['分数','\\frac{§}{ }'],['累乗','^{§}'],['下付き','_{§}'],['平方根','\\sqrt{§}'],['n乗根','\\sqrt[§]{}'],['括弧','\\left(§\\right)'],['絶対値','\\left|§\\right|'],['上線','\\overline{§}'],['下線','\\underline{§}'],['点','\\dot{§}'],['二重点','\\ddot{§}'],['場合分け','\\begin{cases}§\\end{cases}'],['連立','\\begin{aligned}§\\end{aligned}'],['改行','\\\\']
+],
+'演算':[
+ ['足し算','+'],['引き算','-'],['掛け算','\\times'],['割り算','\\div'],['±','\\pm'],['∓','\\mp'],['≠','\\neq'],['≈','\\approx'],['≡','\\equiv'],['≤','\\leq'],['≥','\\geq'],['∞','\\infty'],['比例','\\propto'],['平方','^2'],['階乗','!'],['ドット積','\\cdot']
+],
+'解析':[
+ ['総和','\\sum_{§}^{n}'],['総乗','\\prod_{§}^{n}'],['積分','\\int_{§}^{ }'],['二重積分','\\iint_{§}'],['三重積分','\\iiint_{§}'],['周回積分','\\oint_{§}'],['極限','\\lim_{§\\to 0}'],['微分','\\frac{d}{d§}'],['偏微分','\\frac{\\partial}{\\partial §}'],['勾配','\\nabla §'],['極大','\\max_{§}'],['極小','\\min_{§}'],['上限','\\sup_{§}'],['下限','\\inf_{§}']
+],
+'関数':[
+ ['sin','\\sin(§)'],['cos','\\cos(§)'],['tan','\\tan(§)'],['arcsin','\\arcsin(§)'],['arccos','\\arccos(§)'],['arctan','\\arctan(§)'],['sinh','\\sinh(§)'],['cosh','\\cosh(§)'],['log','\\log_{§}'],['ln','\\ln(§)'],['exp','\\exp(§)'],['関数 f','f(§)'],['場合分け','\\begin{cases}§\\end{cases}']
+],
+'行列':[
+ ['2×2行列','\\begin{pmatrix}a&b\\\\c&d\\end{pmatrix}'],['3×3行列','\\begin{pmatrix}a&b&c\\\\d&e&f\\\\g&h&i\\end{pmatrix}'],['行列式','\\begin{vmatrix}§\\end{vmatrix}'],['角括弧行列','\\begin{bmatrix}§\\end{bmatrix}'],['行列','\\begin{matrix}§\\end{matrix}'],['転置','^{\\mathsf T}'],['逆行列','^{-1}'],['トレース','\\operatorname{tr}(§)'],['ランク','\\operatorname{rank}(§)'],['ベクトル','\\vec{§}'],['単位ベクトル','\\hat{§}']
+],
+'集合・論理':[
+ ['∈','\\in'],['∉','\\notin'],['部分集合','\\subseteq'],['真部分集合','\\subset'],['和集合','\\cup'],['共通部分','\\cap'],['空集合','\\emptyset'],['全体集合','\\mathbb{U}'],['実数','\\mathbb{R}'],['整数','\\mathbb{Z}'],['自然数','\\mathbb{N}'],['有理数','\\mathbb{Q}'],['複素数','\\mathbb{C}'],['かつ','\\land'],['または','\\lor'],['否定','\\neg'],['ならば','\\Rightarrow'],['同値','\\Leftrightarrow'],['任意','\\forall'],['存在','\\exists']
+],
+'ギリシャ文字':[
+ ['α','\\alpha'],['β','\\beta'],['γ','\\gamma'],['δ','\\delta'],['ε','\\epsilon'],['ζ','\\zeta'],['η','\\eta'],['θ','\\theta'],['λ','\\lambda'],['μ','\\mu'],['ν','\\nu'],['ξ','\\xi'],['π','\\pi'],['ρ','\\rho'],['σ','\\sigma'],['τ','\\tau'],['φ','\\phi'],['χ','\\chi'],['ψ','\\psi'],['ω','\\omega'],['Γ','\\Gamma'],['Δ','\\Delta'],['Θ','\\Theta'],['Λ','\\Lambda'],['Π','\\Pi'],['Σ','\\Sigma'],['Φ','\\Phi'],['Ψ','\\Psi'],['Ω','\\Omega']
+],
+'その他':[
+ ['場合分け左括弧','\\left\\{\\begin{array}{ll}§\\end{array}\\right.'],['矢印','\\rightarrow'],['長い矢印','\\longrightarrow'],['左矢印','\\leftarrow'],['両矢印','\\leftrightarrow'],['写像','\\mapsto'],['直交','\\perp'],['平行','\\parallel'],['角度','\\angle'],['三角形','\\triangle'],['度','^\\circ'],['プライム','\\prime'],['実部','\\Re'],['虚部','\\Im'],['期待値','\\mathbb{E}[§]'],['確率','\\Pr(§)'],['ノルム','\\lVert §\\rVert'],['定義','\\coloneqq']
+]};
+const tabs=document.getElementById('tabs'),symbols=document.getElementById('symbols'),input=document.getElementById('latex'),preview=document.getElementById('preview'),status=document.getElementById('status');let active=Object.keys(groups)[0],timer;
+function renderTabs(){tabs.innerHTML='';Object.keys(groups).forEach(name=>{const b=document.createElement('button');b.className='tab'+(name===active?' active':'');b.textContent=name;b.onclick=()=>{active=name;renderTabs();renderSymbols()};tabs.append(b)})}
+function renderSymbols(){symbols.innerHTML='';groups[active].forEach(([label,code])=>{const b=document.createElement('button');b.className='symbol';b.textContent=label;b.title=code;b.onclick=()=>insert(code);symbols.append(b)})}
+function insert(code){const start=input.selectionStart,end=input.selectionEnd;let text=code,offset=-1;if(code.includes('§')){offset=code.indexOf('§');text=code.replace('§','')}input.setRangeText(text,start,end,'end');const pos=offset<0?start+text.length:start+offset;input.focus();input.setSelectionRange(pos,pos);update()}
+function update(){clearTimeout(timer);timer=setTimeout(()=>{const value=input.value.trim();preview.classList.toggle('empty',!value);preview.textContent=value?'\\['+value+'\\]':'数式を入力すると、ここにプレビューが表示されるよ';if(window.MathJax?.typesetPromise){MathJax.typesetClear([preview]);MathJax.typesetPromise([preview]).catch(()=>{preview.textContent='数式を表示できないよ。LaTeXの記述を確認してね。'})}},180)}
+input.addEventListener('input',update);
+document.getElementById('copy').onclick=async()=>{try{await navigator.clipboard.writeText(input.value);status.textContent='コピーしたよ！'}catch(e){input.select();document.execCommand('copy');status.textContent='コピーしたよ！'}setTimeout(()=>status.textContent='',2200)};
+document.getElementById('saveImage').onclick=async()=>{
+ const button=document.getElementById('saveImage');
+ if(!input.value.trim()){status.textContent='先に数式を入力してね';return}
+ if(!window.html2canvas){status.textContent='画像保存ライブラリを読み込めないよ。インターネット接続を確認してね。';return}
+ button.disabled=true;button.textContent='画像を作成中…';status.textContent='';
+ try{
+  if(window.MathJax?.typesetPromise) await MathJax.typesetPromise([preview]);
+  const canvas=await html2canvas(preview,{backgroundColor:'#ffffff',scale:3,useCORS:true,logging:false});
+  const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));
+  if(!blob) throw new Error('PNGの作成に失敗');
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');
+  const stamp=new Date().toISOString().replace(/[:.]/g,'-');
+  a.href=url;a.download='数式_'+stamp+'.png';document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1500);status.textContent='PNG画像を保存したよ！';
+ }catch(e){console.error(e);status.textContent='画像を保存できなかったよ。数式の表示と通信状態を確認してね。'}
+ finally{button.disabled=false;button.textContent='画像として保存（PNG）'}
+};
+document.getElementById('selectAll').onclick=()=>{input.focus();input.select()};
+document.getElementById('clear').onclick=()=>{input.value='';update();input.focus();status.textContent='クリアしたよ';setTimeout(()=>status.textContent='',1600)};
+document.getElementById('example').onclick=()=>{input.value='\\sum_{n=1}^{\\infty} \\frac{1}{n^2}=\\frac{\\pi^2}{6}';update()};
+document.querySelectorAll('[data-wrap]').forEach(b=>b.onclick=()=>insert(b.dataset.wrap));
+renderTabs();renderSymbols();update();
+</script>
+</body>
+</html>
